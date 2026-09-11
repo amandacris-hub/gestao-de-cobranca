@@ -320,6 +320,9 @@
     </div>
     <div style="display:flex;gap:8px;" id="colabActions">
       <button class="btn btn-ghost" id="btnExport">Exportar CSV</button>
+      <button class="btn btn-ghost" id="btnBackupExport">Exportar backup</button>
+      <button class="btn btn-ghost" id="btnBackupImport">Importar backup</button>
+      <input type="file" id="inputBackupImport" accept="application/json" style="display:none">
       <button class="btn btn-primary" id="btnAdd">+ Adicionar colaborador</button>
     </div>
   </header>
@@ -622,7 +625,8 @@ function uid(){ return 'f-' + Date.now() + '-' + Math.random().toString(36).slic
 
 async function loadData(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, false);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const res = raw ? {value: raw} : null;
     if(res && res.value){
       funcionarios = JSON.parse(res.value);
       // Migração: preenche matrícula/admissão/períodos que ainda estejam vazios com os dados mais recentes da planilha
@@ -650,7 +654,7 @@ async function loadData(){
 
 async function saveData(){
   try{
-    await window.storage.set(STORAGE_KEY, JSON.stringify(funcionarios), false);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(funcionarios));
   }catch(e){
     showToast('Não foi possível salvar agora. Tente novamente.');
   }
@@ -1314,6 +1318,40 @@ document.getElementById('btnExport').addEventListener('click', ()=>{
   a.href = url; a.download = 'gestao-de-cobranca.csv';
   a.click();
   URL.revokeObjectURL(url);
+});
+
+document.getElementById('btnBackupExport').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(funcionarios, null, 2)], {type:'application/json;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const hoje = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `backup-gestao-de-cobranca-${hoje}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup exportado.');
+});
+
+document.getElementById('btnBackupImport').addEventListener('click', ()=>{
+  document.getElementById('inputBackupImport').click();
+});
+
+document.getElementById('inputBackupImport').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const texto = await file.text();
+    const dados = JSON.parse(texto);
+    if(!Array.isArray(dados)) throw new Error('Formato inválido');
+    const ok = confirm(`Importar ${dados.length} colaborador(es)? Isso vai substituir os dados atuais neste navegador.`);
+    if(!ok){ e.target.value=''; return; }
+    funcionarios = dados;
+    await saveData();
+    render();
+    showToast('Backup importado com sucesso.');
+  }catch(err){
+    showToast('Arquivo inválido. Verifique se é um backup exportado por aqui.');
+  }
+  e.target.value = '';
 });
 
 document.getElementById('pontoSearch').addEventListener('input', (e)=>{
