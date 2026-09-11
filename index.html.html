@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão de Cobrança</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF1EF;
+    --surface:#FFFFFF;
+    --ink:#202B26;
+    --ink-muted:#5C6B64;
+    --line:#D8DED9;
+    --line-soft:#E6EAE7;
+    --teal:#2F6F6B;
+    --teal-dark:#244F4C;
+    --teal-soft:#E3EEEC;
+    --green:#2F7A52;
+    --green-soft:#E4F1E9;
+    --amber:#B4780F;
+    --amber-soft:#FBF0DD;
+    --red:#B23F3F;
+    --red-soft:#F8E5E3;
+    --blue:#3E5C76;
+    --blue-soft:#E4E9EF;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(32,43,38,0.06), 0 4px 14px rgba(32,43,38,0.05);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    min-height:100vh;
+  }
+  .sidebar{
+    width:216px;
+    flex-shrink:0;
+    background:var(--surface);
+    border-right:1px solid var(--line-soft);
+    min-height:100vh;
+    padding:22px 14px;
+    position:sticky;
+    top:0;
+    align-self:flex-start;
+  }
+  .sidebar-brand{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--ink);
+    padding:4px 10px 18px;
+    letter-spacing:-0.01em;
+  }
+  .side-nav{display:flex;flex-direction:column;gap:2px;}
+  .side-btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;text-align:left;
+    background:none;border:none;cursor:pointer;color:var(--ink-muted);
+    padding:10px 12px;border-radius:8px;border-left:3px solid transparent;
+    transition:background .15s ease, color .15s ease;
+  }
+  .side-btn:hover{background:var(--bg);color:var(--ink);}
+  .side-btn.active{background:var(--teal-soft);color:var(--teal-dark);border-left-color:var(--teal);}
+  .main-content{flex:1;min-width:0;}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--teal-dark);
+    font-weight:500;
+  }
+  header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px;}
+  header.top h1{font-size:26px;font-weight:700;letter-spacing:-0.01em;margin-top:4px;}
+  header.top p{margin:4px 0 0;color:var(--ink-muted);font-size:13.5px;}
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    border:none;
+    border-radius:8px;
+    padding:10px 16px;
+    cursor:pointer;
+    transition:transform .08s ease, background .15s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+  .btn-ghost:hover{background:var(--line-soft);}
+  .btn-danger{background:var(--red-soft);color:var(--red);}
+  .btn-danger:hover{background:#f2d2ce;}
+  .btn-sm{padding:6px 11px;font-size:12.5px;}
+
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:22px;}
+  @media (max-width:900px){.cards{grid-template-columns:repeat(2,1fr);}}
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius);
+    padding:16px 16px 14px;
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  .card.active{border-color:var(--teal);}
+  .card .num{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;line-height:1;}
+  .card .lbl{font-size:12px;color:var(--ink-muted);margin-top:6px;font-weight:500;}
+  .card.red .num{color:var(--red);}
+  .card.amber .num{color:var(--amber);}
+  .card.blue .num{color:var(--blue);}
+  .card.green .num{color:var(--green);}
+
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+  .search{
+    flex:1;min-width:180px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px 12px;
+    font-size:13.5px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  .search:focus{outline:2px solid var(--teal);outline-offset:-1px;}
+
+  .table-wrap{
+    background:var(--surface);
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow-x:auto;
+  }
+  table{width:100%;border-collapse:collapse;min-width:820px;}
+  thead th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--ink-muted);
+    font-weight:600;
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--line-soft);font-size:13.5px;vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.row-main{cursor:pointer;}
+  tbody tr.row-main:hover{background:var(--bg);}
+  .nome{font-weight:600;}
+  .mat{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-muted);}
+  .mono{font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 9px;border-radius:100px;
+    font-size:11.5px;font-weight:600;
+    white-space:nowrap;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;}
+  .badge.red{background:var(--red-soft);color:var(--red);} .badge.red .dot{background:var(--red);}
+  .badge.amber{background:var(--amber-soft);color:var(--amber);} .badge.amber .dot{background:var(--amber);}
+  .badge.green{background:var(--green-soft);color:var(--green);} .badge.green .dot{background:var(--green);}
+  .badge.blue{background:var(--blue-soft);color:var(--blue);} .badge.blue .dot{background:var(--blue);}
+  .badge.purple{background:#EDE3F0;color:#6B3F82;} .badge.purple .dot{background:#6B3F82;}
+
+  .timeline{width:180px;}
+  .tl-track{position:relative;height:8px;border-radius:4px;background:var(--line-soft);overflow:visible;}
+  .tl-seg{position:absolute;top:0;height:100%;border-radius:4px;}
+  .tl-today{position:absolute;top:-3px;width:2px;height:14px;background:var(--ink);border-radius:1px;}
+  .tl-caption{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--ink-muted);font-family:'IBM Plex Mono',monospace;}
+
+  .detail{background:var(--bg);}
+  .detail-inner{padding:18px 22px 22px;}
+  .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+  @media (max-width:760px){.detail-grid{grid-template-columns:1fr;}}
+  .field label{display:block;font-size:11px;color:var(--ink-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+  .field input, .field textarea{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:8px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    color:var(--ink);
+  }
+  .field input:focus, .field textarea:focus{outline:2px solid var(--teal);outline-offset:-1px;}
+  .agend-list{margin-bottom:14px;}
+  .agend-row{display:grid;grid-template-columns:1fr 1fr 65px 75px 1.2fr auto;gap:8px;margin-bottom:8px;align-items:center;}
+  @media (max-width:760px){.agend-row{grid-template-columns:1fr 1fr;}}
+  .agend-row input{padding:7px 9px;font-size:13px;border:1px solid var(--line);border-radius:6px;font-family:'Inter',sans-serif;}
+  .agend-row label.mini{font-size:9px;color:var(--ink-muted);display:block;margin-bottom:2px;text-transform:uppercase;letter-spacing:.03em;}
+  .section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);margin-bottom:10px;}
+  .detail-actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:14px;border-top:1px solid var(--line-soft);}
+
+  .empty{padding:60px 20px;text-align:center;color:var(--ink-muted);}
+  .empty h3{font-size:16px;margin-bottom:6px;color:var(--ink);}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(32,43,38,.35);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .modal{background:var(--surface);border-radius:12px;padding:22px;width:100%;max-width:420px;box-shadow:0 12px 40px rgba(0,0,0,.2);}
+  .modal h3{font-size:16px;margin-bottom:14px;}
+  .modal .field{margin-bottom:12px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;
+    font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.2);z-index:100;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;
+  }
+  .toast.show{opacity:1;}
+
+  .chev{transition:transform .15s ease;display:inline-block;color:var(--ink-muted);}
+  .chev.open{transform:rotate(90deg);}
+
+  .foot-note{margin-top:18px;font-size:11.5px;color:var(--ink-muted);text-align:center;}
+
+  .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--line);}
+  .tab-btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;
+    background:transparent;border:none;cursor:pointer;
+    padding:10px 4px;margin-right:22px;color:var(--ink-muted);
+    border-bottom:2px solid transparent;
+    transform:translateY(1px);
+  }
+  .tab-btn.active{color:var(--teal-dark);border-bottom-color:var(--teal);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px;}
+  @media (max-width:900px){.month-grid{grid-template-columns:repeat(3,1fr);}}
+  .month-card{
+    background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:13px 12px;box-shadow:var(--shadow);
+  }
+  .month-card .mname{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;color:var(--ink);text-transform:capitalize;}
+  .month-card .mpeople{font-size:22px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:var(--teal-dark);margin-top:4px;line-height:1;}
+  .month-card .mdays{font-size:11px;color:var(--ink-muted);margin-top:3px;}
+  .month-card.empty-month{opacity:.45;}
+  .month-card.full{border-color:var(--red);}
+  .full-tag{
+    display:inline-block;font-family:'Inter',sans-serif;font-weight:700;font-size:9.5px;
+    text-transform:uppercase;letter-spacing:.04em;color:var(--red);background:var(--red-soft);
+    padding:2px 6px;border-radius:100px;vertical-align:middle;margin-left:4px;
+  }
+
+  .next-list{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .next-row{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--line-soft);}
+  .next-row:last-child{border-bottom:none;}
+  .next-badge{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+    min-width:64px;text-align:center;padding:5px 0;border-radius:6px;
+    background:var(--teal-soft);color:var(--teal-dark);
+  }
+  .next-badge.soon{background:var(--amber-soft);color:var(--amber);}
+  .next-info{flex:1;}
+  .next-info .nn{font-weight:600;font-size:13.5px;}
+  .next-info .nd{font-size:12px;color:var(--ink-muted);margin-top:2px;}
+  .next-days{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-muted);white-space:nowrap;}
+
+  .camp-header{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;margin-bottom:20px;}
+  .camp-header h2{font-size:17px;font-weight:700;color:var(--teal-dark);}
+  .camp-header .camp-data{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);font-weight:600;margin-top:6px;}
+  .camp-header .camp-dias{font-size:12.5px;color:var(--ink-muted);margin-top:4px;}
+
+  .camp-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px;}
+  .camp-table th{background:var(--teal);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;text-align:right;}
+  .camp-table th:first-child{text-align:left;}
+  .camp-table td{padding:10px 12px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;border-bottom:1px solid var(--line-soft);}
+  .camp-table td:first-child{text-align:left;font-family:'Inter',sans-serif;font-weight:600;}
+  .camp-table tr:last-child td{border-bottom:none;}
+  .camp-neg{color:var(--red);font-weight:600;}
+  .camp-pos{color:var(--green);font-weight:600;}
+
+  .camp-chart-wrap{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 24px;margin-bottom:24px;}
+  .camp-chart-wrap h3{font-size:14px;margin-bottom:18px;}
+  .camp-chart{display:flex;justify-content:space-around;align-items:flex-end;height:200px;gap:24px;}
+  .camp-group{display:flex;flex-direction:column;align-items:center;flex:1;max-width:180px;}
+  .camp-bars{display:flex;align-items:flex-end;gap:6px;height:170px;}
+  .camp-bar{width:34px;border-radius:4px 4px 0 0;position:relative;display:flex;align-items:flex-start;justify-content:center;}
+  .camp-bar .camp-bar-val{position:absolute;top:-18px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;color:var(--ink-muted);white-space:nowrap;}
+  .camp-group-label{margin-top:10px;font-size:12.5px;font-weight:600;color:var(--ink);}
+  .camp-legend{display:flex;gap:18px;justify-content:center;margin-top:16px;font-size:11.5px;color:var(--ink-muted);}
+  .camp-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .camp-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+  .camp-backlog{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 18px;margin-bottom:10px;font-size:13.5px;}
+  .camp-backlog b{color:var(--amber);}
+
+  .camp-glossary{margin-top:18px;font-size:12px;color:var(--ink-muted);line-height:1.7;}
+  .camp-glossary b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-brand">Gestão de Cobrança</div>
+  <nav class="side-nav">
+    <button class="side-btn active" data-tab="colaboradores">Colaboradores</button>
+    <button class="side-btn" data-tab="proximas">Próximas férias</button>
+    <button class="side-btn" data-tab="ponto">Conferência de Ponto</button>
+    <button class="side-btn" data-tab="campanha">Recuperação · Campanha</button>
+  </nav>
+</div>
+
+<div class="main-content">
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="eyebrow">Gestão de Time · Departamento Pessoal</div>
+      <p style="margin-top:6px;">Acompanhe ciclos aquisitivos, prazos de gozo e evite passivo de férias vencidas.</p>
+    </div>
+    <div style="display:flex;gap:8px;" id="colabActions">
+      <button class="btn btn-ghost" id="btnExport">Exportar CSV</button>
+      <button class="btn btn-primary" id="btnAdd">+ Adicionar colaborador</button>
+    </div>
+  </header>
+
+  <div class="tab-panel active" id="tabColaboradores">
+    <div class="cards" id="cards"></div>
+
+    <div class="toolbar">
+      <input class="search" id="search" placeholder="Buscar por nome ou matrícula…">
+      <span class="eyebrow" id="countLabel" style="white-space:nowrap;"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Colaborador</th>
+            <th>Admissão</th>
+            <th>Ciclo atual (aquisitivo → prazo de gozo)</th>
+            <th>Dias disp.</th>
+            <th>Realizou férias?</th>
+            <th>Licença</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyState" style="display:none;">
+        <h3>Nada por aqui</h3>
+        <div>Nenhum colaborador corresponde à busca ou filtro atual.</div>
+      </div>
+    </div>
+
+    <div class="foot-note">Regra aplicada: período aquisitivo de 12 meses após a admissão (ou última renovação), com prazo de 12 meses para o gozo. Os dias tirados somam os períodos agendados já concluídos.</div>
+  </div>
+
+  <div class="tab-panel" id="tabProximas">
+    <div class="eyebrow" style="margin-bottom:4px;">Pessoas por mês (próximos 6 meses)</div>
+    <div style="font-size:11.5px;color:var(--ink-muted);margin-bottom:14px;">Cada período conta no mês em que tem mais dias de férias. Máximo de 2 colaboradores por mês ao agendar novos períodos.</div>
+    <div class="month-grid" id="monthGrid"></div>
+
+    <div class="eyebrow" style="margin-bottom:10px;">Ordem de saída</div>
+    <div class="next-list" id="nextList"></div>
+    <div class="empty" id="proximasEmpty" style="display:none;">
+      <h3>Nenhuma férias agendada</h3>
+      <div>Cadastre períodos futuros na aba Colaboradores para vê-los aqui.</div>
+    </div>
+  </div>
+
+  <div class="tab-panel" id="tabPonto">
+    <div class="eyebrow" style="margin-bottom:4px;">Cartão de ponto — período analisado</div>
+    <div style="font-size:11.5px;color:var(--ink-muted);margin-bottom:16px;" id="pontoPeriodoLabel"></div>
+
+    <div class="cards" id="pontoCards" style="grid-template-columns:repeat(4,1fr);"></div>
+
+    <div class="toolbar">
+      <input class="search" id="pontoSearch" placeholder="Buscar por nome ou matrícula…">
+      <span class="eyebrow" id="pontoCountLabel" style="white-space:nowrap;"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Colaborador</th>
+            <th>Marcações sem bater</th>
+            <th>Sábados não trabalhados</th>
+            <th>Saída ~2h antes (campanha semanal)</th>
+          </tr>
+        </thead>
+        <tbody id="pontoTbody"></tbody>
+      </table>
+    </div>
+
+    <div class="eyebrow" style="margin:28px 0 4px;display:flex;justify-content:space-between;align-items:center;">
+      <span>Banco de horas — ranking de acúmulo</span>
+      <button class="btn btn-ghost btn-sm" id="btnCopiarBanco" style="text-transform:none;font-weight:600;letter-spacing:0;">Copiar lista para chamar</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--ink-muted);margin-bottom:14px;">Acúmulo de horas positivo ou negativo não é autorizado. Ordenado do maior para o menor desvio — linhas em destaque (acima de 4h, positivo ou negativo) indicam quem chamar primeiro.</div>
+    <div class="table-wrap" style="margin-bottom:24px;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Colaborador</th>
+            <th>Saldo inicial</th>
+            <th>Crédito mês</th>
+            <th>Débito mês</th>
+            <th>Saldo final</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="bancoHorasTbody"></tbody>
+      </table>
+    </div>
+
+    <div class="foot-note">Período oficial da folha: sempre do dia 16 ao dia 15 do mês seguinte (esta folha: 16/07 a 15/08, dados lançados até 11/08). Campanha mensal permite até 2 sábados de folga dentro desse período — linhas em vermelho indicam colaboradores acima do limite. "Saída ~2h antes" considera saídas antecipadas entre 1h40 e 2h20, exceto quando justificadas por atestado médico.</div>
+  </div>
+
+  <div class="tab-panel" id="tabCampanha">
+    <div class="camp-header">
+      <h2 id="campTitulo">Acompanhamento de Recuperação — Campanha</h2>
+      <div class="camp-data" id="campData"></div>
+      <div class="camp-dias" id="campDias"></div>
+    </div>
+
+    <table class="camp-table" id="campTable">
+      <thead>
+        <tr>
+          <th>Faixa</th><th>Meta</th><th>Realizado</th><th>Realizado %</th>
+          <th>Projeção</th><th>Projeção %</th><th>Saldo Proj.</th><th>Saldo Proj. %</th><th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody id="campTbody"></tbody>
+    </table>
+
+    <div class="camp-chart-wrap">
+      <h3>Produtividade Recuperação</h3>
+      <div class="camp-chart" id="campChart"></div>
+      <div class="camp-legend">
+        <span><i style="background:#B9C0BC;"></i>Meta</span>
+        <span><i style="background:#AFCFE0;"></i>Realizado</span>
+        <span><i style="background:var(--teal-dark);"></i>Projeção</span>
+      </div>
+    </div>
+
+    <div class="camp-backlog" id="campBacklog"></div>
+    <div class="camp-backlog" id="campFaixa30"></div>
+
+    <div class="camp-glossary">
+      <div><b>Faixa:</b> tempo de atraso dos contratos trabalhados (60, 90 e 120 dias).</div>
+      <div><b>Meta:</b> objetivo total de recuperação estipulado para o mês.</div>
+      <div><b>Realizado %:</b> volume já recuperado e o quanto ele representa da meta.</div>
+      <div><b>Projeção / Projeção %:</b> estimativa de onde a operação vai chegar no fim do mês se mantiver o ritmo atual.</div>
+      <div><b>Saldo Proj. / Saldo Proj. %:</b> o quanto vamos passar da meta (positivo) ou o quanto vai faltar (negativo).</div>
+      <div><b>Saldo:</b> o valor que ainda falta recuperar em relação à meta (Realizado menos Meta).</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PONTO_PERIODO = {inicio:'2026-07-16', fim:'2026-08-15', referencia:'08/2026', dadosAte:'2026-08-11'};
+const PONTO_SABADOS_PERIODO = ['2026-07-18','2026-07-25','2026-08-01','2026-08-08'];
+const pontoData = [
+  {nome:"Alice Mariano Ramos",matricula:"4415",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[],saidasAntecipadas2h:[]},
+  {nome:"Amanda Cristina Aparecida Silva",matricula:"2340",marcacoesIncompletas:[{data:"2026-07-17",dow:"Sex",tipo:"saida"},{data:"2026-07-24",dow:"Sex",tipo:"entrada"},{data:"2026-07-25",dow:"Sáb",tipo:"saida"}],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[{data:"2026-08-10",qtde:"01:59"}]},
+  {nome:"Ana Julia Camargo",matricula:"9867",marcacoesIncompletas:[{data:"2026-08-04",dow:"Ter",tipo:"saida"}],sabadosNaoTrabalhados:[{data:"2026-08-01",qtde:"04:00"},{data:"2026-08-08",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"}],saidasAntecipadas2h:[]},
+  {nome:"Bianca Vieira Vulcani",matricula:"2244",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[{data:"2026-07-24",qtde:"01:45"}]},
+  {nome:"Cinthia Suelen Cotrim Dos Santos",matricula:"8377",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[],saidasAntecipadas2h:[]},
+  {nome:"Clara Marcelino Da Silva",matricula:"123227",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Claudia Fernanda Pin De Mattos",matricula:"1213121",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-25",qtde:"04:00"},{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-08-08"}],saidasAntecipadas2h:[{data:"2026-07-31",qtde:"02:02"}]},
+  {nome:"Daniela Vanessa Bianchi",matricula:"8089",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-18",qtde:"04:00"},{data:"2026-07-25",qtde:"04:00"},{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-08-08"}],saidasAntecipadas2h:[{data:"2026-08-03",qtde:"02:00"}]},
+  {nome:"Diego Correa Dos Santos",matricula:"695",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Gabrielli Ferreira Profeta",matricula:"13028",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-18",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Gabriely Dos Santos",matricula:"3549",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-25",qtde:"04:00"},{data:"2026-08-08",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-08-01"}],saidasAntecipadas2h:[]},
+  {nome:"Geovana Pereira Dos Santos",matricula:"6729",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Jade Oliveira Franco Da Silva",matricula:"6281",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-18",qtde:"04:00"},{data:"2026-07-25",qtde:"04:00"},{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Joao Victor Vitoriano Da Silva",matricula:"13020",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Karyna Cristina Meira Dos Santos",matricula:"4832",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-08-08",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"}],saidasAntecipadas2h:[]},
+  {nome:"Luciana Fernandes Lacerda",matricula:"4739",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-18",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[{data:"2026-07-23",qtde:"02:15"}]},
+  {nome:"Luiz Gustavo Damas Da Silva",matricula:"11433",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Maria Clara Vieira Caires",matricula:"6010",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Mariana Nunes Silva",matricula:"5252",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Marina Alves Domingos",matricula:"121687",marcacoesIncompletas:[{data:"2026-08-08",dow:"Sáb",tipo:"saida"}],sabadosNaoTrabalhados:[{data:"2026-07-18",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+  {nome:"Sara Barbosa Vilar",matricula:"7383",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-25",qtde:"04:00"},{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-08-08"}],saidasAntecipadas2h:[{data:"2026-07-17",qtde:"02:10"},{data:"2026-07-24",qtde:"02:01"}]},
+  {nome:"Tainara Livia Rocha",matricula:"3504",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-18",qtde:"04:00"},{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-25"}],saidasAntecipadas2h:[]},
+  {nome:"Thierry Rodrigues Dias",matricula:"7513",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-08-08"}],saidasAntecipadas2h:[]},
+];
+const bancoHorasData = [
+  {nome:"Gabrielli Ferreira Profeta",matricula:"13028",saldoInicial:"-156:48",credito:"00:15",debito:"-19:26",saldoFinal:"-175:59",saldoFinalMin:-10559},
+  {nome:"Jade Oliveira Franco Da Silva",matricula:"6281",saldoInicial:"-27:18",credito:"00:39",debito:"-12:29",saldoFinal:"-39:08",saldoFinalMin:-2348},
+  {nome:"Luciana Fernandes Lacerda",matricula:"4739",saldoInicial:"-19:11",credito:"00:53",debito:"-16:16",saldoFinal:"-34:34",saldoFinalMin:-2074},
+  {nome:"Sara Barbosa Vilar",matricula:"7383",saldoInicial:"-18:06",credito:"01:18",debito:"-13:13",saldoFinal:"-30:01",saldoFinalMin:-1801},
+  {nome:"Clara Marcelino Da Silva",matricula:"123227",saldoInicial:"-25:22",credito:"00:23",debito:"-00:55",saldoFinal:"-25:54",saldoFinalMin:-1554},
+  {nome:"Cinthia Suelen Cotrim Dos Santos",matricula:"8377",saldoInicial:"22:21",credito:"00:00",debito:"00:00",saldoFinal:"22:21",saldoFinalMin:1341},
+  {nome:"Amanda Cristina Aparecida Silva",matricula:"2340",saldoInicial:"02:34",credito:"06:37",debito:"-31:08",saldoFinal:"-21:57",saldoFinalMin:-1317},
+  {nome:"Ana Julia Camargo",matricula:"9867",saldoInicial:"-02:20",credito:"00:11",debito:"-12:00",saldoFinal:"-14:09",saldoFinalMin:-849},
+  {nome:"Gabriely Dos Santos",matricula:"3549",saldoInicial:"-07:41",credito:"02:53",debito:"-08:00",saldoFinal:"-12:48",saldoFinalMin:-768},
+  {nome:"Thierry Rodrigues Dias",matricula:"7513",saldoInicial:"-09:11",credito:"00:25",debito:"-04:00",saldoFinal:"-12:46",saldoFinalMin:-766},
+  {nome:"Marina Alves Domingos",matricula:"121687",saldoInicial:"-02:36",credito:"00:32",debito:"-09:00",saldoFinal:"-11:04",saldoFinalMin:-664},
+  {nome:"Claudia Fernanda Pin De Mattos",matricula:"1213121",saldoInicial:"01:44",credito:"01:17",debito:"-10:20",saldoFinal:"-07:19",saldoFinalMin:-439},
+  {nome:"Bianca Vieira Vulcani",matricula:"2244",saldoInicial:"10:10",credito:"00:00",debito:"-03:03",saldoFinal:"07:07",saldoFinalMin:427},
+  {nome:"Daniela Vanessa Bianchi",matricula:"8089",saldoInicial:"10:39",credito:"00:00",debito:"-14:41",saldoFinal:"-04:02",saldoFinalMin:-242},
+  {nome:"Geovana Pereira Dos Santos",matricula:"6729",saldoInicial:"00:04",credito:"00:55",debito:"-04:36",saldoFinal:"-03:37",saldoFinalMin:-217},
+  {nome:"Maria Clara Vieira Caires",matricula:"6010",saldoInicial:"-02:08",credito:"05:25",debito:"-00:11",saldoFinal:"03:06",saldoFinalMin:186},
+  {nome:"Mariana Nunes Silva",matricula:"5252",saldoInicial:"01:15",credito:"00:17",debito:"-04:11",saldoFinal:"-02:39",saldoFinalMin:-159},
+  {nome:"Diego Correa Dos Santos",matricula:"695",saldoInicial:"-03:50",credito:"01:35",debito:"00:00",saldoFinal:"-02:15",saldoFinalMin:-135},
+  {nome:"Luiz Gustavo Damas Da Silva",matricula:"11433",saldoInicial:"01:33",credito:"01:18",debito:"-00:39",saldoFinal:"02:12",saldoFinalMin:132},
+  {nome:"Alice Mariano Ramos",matricula:"4415",saldoInicial:"02:10",credito:"00:00",debito:"00:00",saldoFinal:"02:10",saldoFinalMin:130},
+  {nome:"Tainara Livia Rocha",matricula:"3504",saldoInicial:"07:27",credito:"01:35",debito:"-10:05",saldoFinal:"-01:03",saldoFinalMin:-63},
+  {nome:"Karyna Cristina Meira Dos Santos",matricula:"4832",saldoInicial:"01:35",credito:"01:37",debito:"-04:13",saldoFinal:"-01:01",saldoFinalMin:-61},
+  {nome:"Joao Victor Vitoriano Da Silva",matricula:"13020",saldoInicial:"-00:20",credito:"00:44",debito:"-01:10",saldoFinal:"-00:46",saldoFinalMin:-46},
+];
+const BANCO_HORAS_LIMITE_MIN = 240; // 4h — acima disso, priorizar chamada
+
+const campanhaData = {
+  titulo: 'Acompanhamento de Recuperação — Campanha',
+  dataAtual: '2026-08-07',
+  projecaoLabel: 'D-1',
+  diasFaltantes: 19.1,
+  faixas: [
+    {faixa:'60 dias', meta:3650, realizado:1068, realizadoPct:29, projecao:3200, projecaoPct:88, saldoProj:-450, saldoProjPct:-12, saldo:-2582},
+    {faixa:'90 dias', meta:2300, realizado:450, realizadoPct:20, projecao:2293, projecaoPct:100, saldoProj:-7, saldoProjPct:0, saldo:-1850},
+    {faixa:'120 dias', meta:1200, realizado:311, realizadoPct:26, projecao:1183, projecaoPct:99, saldoProj:-17, saldoProjPct:-1, saldo:-889}
+  ],
+  backlog: {recuperado:189, total:1346, pct:14.04},
+  faixa30d: {recuperado:42150, total:89281, pct:47.21}
+};
+
+function fmtNum(n){ return n.toLocaleString('pt-BR'); }
+function fmtPct(n){ return `${n>0?'+':''}${n}%`.replace('+-','-'); }
+
+function renderCampanha(){
+  document.getElementById('campTitulo').textContent = campanhaData.titulo;
+  document.getElementById('campData').textContent = `Data atual: ${fmtCurta(campanhaData.dataAtual)}/${parseDate(campanhaData.dataAtual).getFullYear()} – Projeção em ${campanhaData.projecaoLabel}`;
+  document.getElementById('campDias').textContent = `Faltam ${String(campanhaData.diasFaltantes).replace('.',',')} dias de trabalho para acabar o mês.`;
+
+  document.getElementById('campTbody').innerHTML = campanhaData.faixas.map(f=>`
+    <tr>
+      <td>${f.faixa}</td>
+      <td>${fmtNum(f.meta)}</td>
+      <td>${fmtNum(f.realizado)}</td>
+      <td class="${f.realizadoPct<50?'camp-neg':'camp-pos'}">${f.realizadoPct}%</td>
+      <td>${fmtNum(f.projecao)}</td>
+      <td class="${f.projecaoPct<100?'camp-neg':'camp-pos'}">${f.projecaoPct}%</td>
+      <td class="${f.saldoProj<0?'camp-neg':'camp-pos'}">${fmtNum(f.saldoProj)}</td>
+      <td class="${f.saldoProjPct<0?'camp-neg':'camp-pos'}">${fmtPct(f.saldoProjPct)}</td>
+      <td class="${f.saldo<0?'camp-neg':'camp-pos'}">${fmtNum(f.saldo)}</td>
+    </tr>
+  `).join('');
+
+  const maxVal = Math.max(...campanhaData.faixas.flatMap(f=>[f.meta,f.realizado,f.projecao]));
+  document.getElementById('campChart').innerHTML = campanhaData.faixas.map(f=>{
+    const hMeta = Math.round((f.meta/maxVal)*160);
+    const hReal = Math.round((f.realizado/maxVal)*160);
+    const hProj = Math.round((f.projecao/maxVal)*160);
+    return `
+      <div class="camp-group">
+        <div class="camp-bars">
+          <div class="camp-bar" style="height:${hMeta}px;background:#B9C0BC;"><span class="camp-bar-val">${fmtNum(f.meta)}</span></div>
+          <div class="camp-bar" style="height:${hReal}px;background:#AFCFE0;"><span class="camp-bar-val">${fmtNum(f.realizado)}</span></div>
+          <div class="camp-bar" style="height:${hProj}px;background:var(--teal-dark);"><span class="camp-bar-val" style="color:var(--teal-dark);font-weight:600;">${fmtNum(f.projecao)}</span></div>
+        </div>
+        <div class="camp-group-label">${f.faixa}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('campBacklog').innerHTML = `🎯 <b>Recuperação do Back-Log:</b> ${fmtNum(campanhaData.backlog.recuperado)} de ${fmtNum(campanhaData.backlog.total)} — Percentual recuperado ${String(campanhaData.backlog.pct).replace('.',',')}%`;
+  document.getElementById('campFaixa30').innerHTML = `🎯 <b>Recuperação na Faixa 30D:</b> ${fmtNum(campanhaData.faixa30d.recuperado)} de ${fmtNum(campanhaData.faixa30d.total)} — Percentual recuperado ${String(campanhaData.faixa30d.pct).replace('.',',')}%`;
+}
+
+const STORAGE_KEY = 'funcionarios';
+let funcionarios = [];
+let filtroStatus = 'todos';
+let busca = '';
+let expandedId = null;
+
+const seedRaw = [
+  {matricula:4415, nome:"Alice Ramos", admissao:"2022-06-20", periodos:[["2026-12-14","2027-01-02",20]]},
+  {matricula:9867, nome:"Ana Julia", admissao:"2025-05-12", periodos:[["2026-11-03","2026-12-02",30]]},
+  {matricula:2244, nome:"Bianca Vulcani", admissao:"2021-03-01", periodos:[["2026-09-30","2026-10-29",30]]},
+  {matricula:8377, nome:"Cinthia Suelen", admissao:"2025-04-07", periodos:[]},
+  {matricula:123227, nome:"Clara Marcelino", admissao:"2025-05-19", periodos:[["2027-01-04","2027-02-02",30]]},
+  {matricula:1213121, nome:"Claudia Fernanda", admissao:"2025-01-06", periodos:[["2026-03-10","2026-04-08",30]]},
+  {matricula:8089, nome:"Daniela Vanessa", admissao:"2024-03-04", periodos:[["2027-01-04","2027-02-02",30]]},
+  {matricula:695, nome:"Diego Santos", admissao:"2016-08-08", periodos:[["2026-07-01","2026-07-20",20]]},
+  {matricula:13028, nome:"Gabielli Profeta", admissao:"2025-11-03", periodos:[]},
+  {matricula:3549, nome:"Gabriely dos Santos", admissao:"2021-12-20", periodos:[["2026-09-08","2026-09-27",20]]},
+  {matricula:6729, nome:"Geovana Santos", admissao:"2023-10-16", periodos:[["2026-04-06","2026-05-05",30]]},
+  {matricula:6281, nome:"Jade Oliveira", admissao:"2023-09-18", periodos:[["2026-03-16","2026-03-30",15],["2026-07-27","2026-07-31",5]]},
+  {matricula:13020, nome:"João Victor", admissao:"2025-11-03", periodos:[]},
+  {matricula:4832, nome:"Karyna Santos", admissao:"2022-10-10", periodos:[["2025-10-13","2025-10-27",15],["2026-09-07","2026-09-21",15]]},
+  {matricula:4739, nome:"Luciana Lacerda", admissao:"2022-09-19", periodos:[["2026-02-04","2026-02-23",20],["2027-04-12","2027-05-01",20]]},
+  {matricula:11433, nome:"Luiz Gustavo", admissao:"2024-08-05", periodos:[["2027-01-04","2027-02-02",30]]},
+  {matricula:6010, nome:"Maria Clara", admissao:"2023-07-03", periodos:[["2026-09-30","2026-10-29",30]]},
+  {matricula:7383, nome:"Sara Vilar", admissao:"2023-12-18", periodos:[["2026-11-09","2026-11-28",20]]},
+  {matricula:5252, nome:"Mariana Silva", admissao:"2023-01-23", periodos:[["2026-11-03","2026-12-02",30]]},
+  {matricula:121687, nome:"Marina Domingos", admissao:"2025-02-03", periodos:[["2026-12-14","2027-01-02",20]]},
+  {matricula:3504, nome:"Tainara Rocha", admissao:"2021-12-01", periodos:[["2026-08-03","2026-09-01",30]]},
+  {matricula:7513, nome:"Thierry Dias", admissao:"2025-03-10", periodos:[["2026-07-01","2026-07-30",30]]}
+];
+
+function seedData(){
+  return seedRaw.map((f,i)=>({
+    id: 'seed-'+i,
+    matricula: f.matricula || '',
+    nome: f.nome,
+    admissao: f.admissao,
+    situacaoEspecial: '',
+    agendamentos: (f.periodos||[]).map(([inicio,fim,dias])=>({inicio,fim,dias,abono:'',obs:''})),
+    obs: ''
+  }));
+}
+
+function uid(){ return 'f-' + Date.now() + '-' + Math.random().toString(36).slice(2,8); }
+
+async function loadData(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if(res && res.value){
+      funcionarios = JSON.parse(res.value);
+      // Migração: preenche matrícula/admissão/períodos que ainda estejam vazios com os dados mais recentes da planilha
+      const seedByName = {};
+      seedData().forEach(s=>{ seedByName[s.nome] = s; });
+      let changed = false;
+      funcionarios.forEach(f=>{
+        const s = seedByName[f.nome];
+        if(!s) return;
+        if(!f.matricula && s.matricula){ f.matricula = s.matricula; changed = true; }
+        if(!f.admissao && s.admissao){ f.admissao = s.admissao; changed = true; }
+        if((!f.agendamentos || f.agendamentos.length===0) && s.agendamentos.length){ f.agendamentos = s.agendamentos; changed = true; }
+      });
+      if(changed) await saveData();
+    } else {
+      funcionarios = seedData();
+      await saveData();
+    }
+  }catch(e){
+    funcionarios = seedData();
+    try{ await saveData(); }catch(e2){}
+  }
+  render();
+}
+
+async function saveData(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(funcionarios), false);
+  }catch(e){
+    showToast('Não foi possível salvar agora. Tente novamente.');
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ---------- Cálculo de ciclo ----------
+function addYears(d, n){ const r = new Date(d); r.setFullYear(r.getFullYear()+n); return r; }
+function parseDate(s){ if(!s) return null; const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function fmt(d){ if(!d) return '—'; return d.toLocaleDateString('pt-BR'); }
+function daysBetween(a,b){ return Math.round((b-a)/(1000*60*60*24)); }
+
+// Mês em que o período tem mais dias (ex: 30/09 a 29/10 conta em outubro)
+function majorityMonthKey(inicioStr, fimStr){
+  const inicio = parseDate(inicioStr), fim = parseDate(fimStr);
+  if(!inicio || !fim || fim < inicio) return null;
+  const counts = {};
+  let d = new Date(inicio);
+  while(d <= fim){
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    counts[key] = (counts[key]||0)+1;
+    d.setDate(d.getDate()+1);
+  }
+  let bestKey=null, bestVal=-1;
+  Object.entries(counts).forEach(([k,v])=>{ if(v>bestVal){ bestVal=v; bestKey=k; } });
+  return bestKey;
+}
+
+function monthLabel(key){
+  const [y,m] = key.split('-').map(Number);
+  return `${MESES[m-1].charAt(0).toUpperCase()+MESES[m-1].slice(1)}/${String(y).slice(2)}`;
+}
+
+const MONTH_CAP = 2;
+
+// Quantos colaboradores distintos já têm o mês (key) como mês predominante de férias, excluindo excludeId
+function monthHeadcount(monthKey, excludeId){
+  const s = new Set();
+  funcionarios.forEach(f=>{
+    if(f.id===excludeId) return;
+    (f.agendamentos||[]).forEach(a=>{
+      if(a.inicio && a.fim && majorityMonthKey(a.inicio,a.fim)===monthKey) s.add(f.id);
+    });
+  });
+  return s.size;
+}
+
+function computeCycle(f){
+  const admissao = parseDate(f.admissao);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  if(!admissao){
+    return {status:'sem-dados', cicloInicio:null, cicloFim:null, limite:null, diasDisponiveis:null};
+  }
+  let cicloInicio = new Date(admissao);
+  while(addYears(cicloInicio,1) <= today){
+    cicloInicio = addYears(cicloInicio,1);
+  }
+  const cicloFim = addYears(cicloInicio,1);
+  const limite = addYears(cicloFim,1);
+  const diasTirados = (f.agendamentos||[]).reduce((sum,a)=>{
+    const fim = parseDate(a.fim);
+    const abono = Number(a.abono)||0;
+    const dias = Number(a.dias)||0;
+    // Dias de licença física só contam depois que o período passou; abono conta assim que registrado
+    const parcelaDias = (fim && fim <= today) ? dias : 0;
+    return sum + parcelaDias + abono;
+  }, 0);
+  const diasDisponiveis = Math.max(0, 30-diasTirados);
+
+  let status;
+  if(today < cicloFim){
+    status = 'aquisicao';
+  } else if(today >= limite){
+    status = 'vencida';
+  } else if(daysBetween(today, limite) <= 90){
+    status = 'vencendo';
+  } else {
+    status = 'em-dia';
+  }
+  return {status, cicloInicio, cicloFim, limite, diasDisponiveis, diasTirados, today};
+}
+
+const STATUS_META = {
+  'vencida': {label:'Férias vencidas', cls:'red'},
+  'vencendo': {label:'Vencendo (≤90 dias)', cls:'amber'},
+  'aquisicao': {label:'Em aquisição', cls:'blue'},
+  'em-dia': {label:'Dentro do prazo', cls:'green'},
+  'sem-dados': {label:'Sem data de admissão', cls:'blue'}
+};
+
+const LICENCA_META = {
+  'acidente': {label:'Licença acidentária', cls:'purple'},
+  'maternidade': {label:'Licença maternidade', cls:'purple'}
+};
+
+const REALIZACAO_META = {
+  'nao': {label:'Não realizou', cls:'red'},
+  'parcial': {label:'Parcial', cls:'amber'},
+  'completa': {label:'Realizou (30d)', cls:'green'}
+};
+
+function realizacaoStatus(c){
+  if(c.diasTirados===undefined || c.diasTirados===null) return null;
+  if(c.diasTirados<=0) return 'nao';
+  if(c.diasTirados>=30) return 'completa';
+  return 'parcial';
+}
+
+// ---------- Render ----------
+function render(){
+  renderCards();
+  renderTable();
+  renderProximas();
+}
+
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+function renderProximas(){
+  const monthGrid = document.getElementById('monthGrid');
+  const nextList = document.getElementById('nextList');
+  const emptyEl = document.getElementById('proximasEmpty');
+  if(!monthGrid) return;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Lista achatada de todos os períodos futuros
+  let upcoming = [];
+  funcionarios.forEach(f=>{
+    (f.agendamentos||[]).forEach(a=>{
+      const inicio = parseDate(a.inicio);
+      const fim = parseDate(a.fim);
+      if(inicio && inicio >= today){
+        upcoming.push({
+          nome:f.nome, matricula:f.matricula, inicio, fim, dias:Number(a.dias)||0,
+          majorityKey: majorityMonthKey(a.inicio,a.fim)
+        });
+      }
+    });
+  });
+  upcoming.sort((a,b)=>a.inicio-b.inicio);
+
+  // Cards por mês (próximos 6 meses corridos a partir do mês atual) — conta no mês com mais dias do período
+  const monthCards = [];
+  for(let i=0;i<6;i++){
+    const ref = new Date(today.getFullYear(), today.getMonth()+i, 1);
+    const y = ref.getFullYear(), m = ref.getMonth();
+    const key = `${y}-${String(m+1).padStart(2,'0')}`;
+    const inMonth = upcoming.filter(u=>u.majorityKey===key);
+    const totalDias = inMonth.reduce((s,u)=>s+u.dias,0);
+    monthCards.push({label:`${MESES[m]}/${String(y).slice(2)}`, pessoas:inMonth.length, dias:totalDias, full:inMonth.length>=MONTH_CAP});
+  }
+  monthGrid.innerHTML = monthCards.map(mc=>`
+    <div class="month-card ${mc.pessoas===0?'empty-month':''} ${mc.full?'full':''}">
+      <div class="mname">${mc.label} ${mc.full?'<span class="full-tag">lotado</span>':''}</div>
+      <div class="mpeople">${mc.pessoas}</div>
+      <div class="mdays">${mc.pessoas===0?'ninguém':(mc.dias+' dias no total')}</div>
+    </div>
+  `).join('');
+
+  // Lista de ordem de saída
+  emptyEl.style.display = upcoming.length ? 'none' : 'block';
+  nextList.innerHTML = upcoming.map(u=>{
+    const faltam = daysBetween(today, u.inicio);
+    const soon = faltam<=30;
+    const inicioMonthKey = `${u.inicio.getFullYear()}-${String(u.inicio.getMonth()+1).padStart(2,'0')}`;
+    const contaNota = u.majorityKey && u.majorityKey!==inicioMonthKey ? `<span style="color:var(--ink-muted);"> · conta em ${monthLabel(u.majorityKey)}</span>` : '';
+    return `
+      <div class="next-row">
+        <div class="next-badge ${soon?'soon':''}">${fmt(u.inicio)}</div>
+        <div class="next-info">
+          <div class="nn">${escapeHtml(u.nome)}</div>
+          <div class="nd">${fmt(u.inicio)} → ${fmt(u.fim)} · ${u.dias} dias${u.matricula?' · Mat. '+u.matricula:''}${contaNota}</div>
+        </div>
+        <div class="next-days">faltam ${faltam}d</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCards(){
+  const counts = {vencida:0, vencendo:0, aquisicao:0, 'em-dia':0};
+  funcionarios.forEach(f=>{
+    const c = computeCycle(f);
+    if(counts[c.status]!==undefined) counts[c.status]++;
+  });
+  const cards = [
+    {key:'todos', num:funcionarios.length, lbl:'Total de colaboradores', cls:''},
+    {key:'vencida', num:counts.vencida, lbl:'Férias vencidas', cls:'red'},
+    {key:'vencendo', num:counts.vencendo, lbl:'Vencendo em ≤90 dias', cls:'amber'},
+    {key:'aquisicao', num:counts.aquisicao, lbl:'Em aquisição', cls:'blue'},
+    {key:'em-dia', num:counts['em-dia'], lbl:'Dentro do prazo', cls:'green'}
+  ];
+  document.getElementById('cards').innerHTML = cards.map(c=>`
+    <div class="card ${c.cls} ${filtroStatus===c.key?'active':''}" data-key="${c.key}">
+      <div class="num">${c.num}</div>
+      <div class="lbl">${c.lbl}</div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.card').forEach(el=>{
+    el.addEventListener('click', ()=>{ filtroStatus = el.dataset.key; render(); });
+  });
+}
+
+function timelineHTML(c){
+  if(c.status==='sem-dados'){
+    return `<div class="timeline"><div class="tl-caption"><span>—</span><span>Sem admissão cadastrada</span></div></div>`;
+  }
+  const totalSpanDays = daysBetween(c.cicloInicio, c.limite);
+  const midPct = (daysBetween(c.cicloInicio, c.cicloFim)/totalSpanDays)*100;
+  let todayPct = (daysBetween(c.cicloInicio, c.today)/totalSpanDays)*100;
+  todayPct = Math.max(0, Math.min(100, todayPct));
+  const segColor = c.status==='vencida' ? 'var(--red)' : c.status==='vencendo' ? 'var(--amber)' : c.status==='aquisicao' ? 'var(--blue)' : 'var(--green)';
+  return `
+    <div class="timeline">
+      <div class="tl-track">
+        <div class="tl-seg" style="left:0;width:${midPct}%;background:var(--line);"></div>
+        <div class="tl-seg" style="left:${midPct}%;width:${100-midPct}%;background:${segColor};opacity:.55;"></div>
+        <div class="tl-today" style="left:${todayPct}%;" title="Hoje"></div>
+      </div>
+      <div class="tl-caption"><span>${fmt(c.cicloInicio)}</span><span>${fmt(c.limite)}</span></div>
+    </div>
+  `;
+}
+
+function renderTable(){
+  let list = funcionarios.map(f=>({f, c:computeCycle(f)}));
+
+  if(filtroStatus!=='todos'){
+    list = list.filter(x=>x.c.status===filtroStatus);
+  }
+  if(busca.trim()){
+    const q = busca.trim().toLowerCase();
+    list = list.filter(x=> x.f.nome.toLowerCase().includes(q) || String(x.f.matricula).toLowerCase().includes(q));
+  }
+  // ordena: vencidas > vencendo > aquisicao > em-dia, e dentro disso pelo prazo mais próximo
+  const order = {vencida:0, vencendo:1, 'sem-dados':2, aquisicao:3, 'em-dia':4};
+  list.sort((a,b)=>{
+    const oa = order[a.c.status], ob = order[b.c.status];
+    if(oa!==ob) return oa-ob;
+    const la = a.c.limite ? a.c.limite.getTime() : Infinity;
+    const lb = b.c.limite ? b.c.limite.getTime() : Infinity;
+    return la-lb;
+  });
+
+  document.getElementById('countLabel').textContent = `${list.length} de ${funcionarios.length}`;
+  document.getElementById('emptyState').style.display = list.length ? 'none' : 'block';
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = list.map(({f,c})=>{
+    const meta = STATUS_META[c.status];
+    const lic = LICENCA_META[f.situacaoEspecial];
+    const realMeta = REALIZACAO_META[realizacaoStatus(c)];
+    const isOpen = expandedId===f.id;
+    return `
+      <tr class="row-main" data-id="${f.id}">
+        <td>
+          <div class="nome">${escapeHtml(f.nome)}</div>
+          <div class="mat">${f.matricula ? 'Mat. '+f.matricula : 'sem matrícula'}</div>
+        </td>
+        <td class="mono">${f.admissao ? fmt(parseDate(f.admissao)) : '—'}</td>
+        <td>${timelineHTML(c)}</td>
+        <td class="mono">${c.diasDisponiveis===null? '—' : c.diasDisponiveis+'d'}</td>
+        <td>${realMeta ? `<span class="badge ${realMeta.cls}"><span class="dot"></span>${realMeta.label}</span>` : '<span class="mono" style="color:var(--ink-muted);">—</span>'}</td>
+        <td>${lic ? `<span class="badge ${lic.cls}"><span class="dot"></span>${lic.label}</span>` : '<span class="mono" style="color:var(--ink-muted);">—</span>'}</td>
+        <td><span class="badge ${meta.cls}"><span class="dot"></span>${meta.label}</span></td>
+        <td><span class="chev ${isOpen?'open':''}">▸</span></td>
+      </tr>
+      ${isOpen ? `<tr class="detail"><td colspan="8">${detailHTML(f,c)}</td></tr>` : ''}
+    `;
+  }).join('');
+
+  tbody.querySelectorAll('tr.row-main').forEach(tr=>{
+    tr.addEventListener('click', ()=>{
+      const id = tr.dataset.id;
+      expandedId = expandedId===id ? null : id;
+      render();
+    });
+  });
+
+  if(expandedId) wireDetailEvents();
+}
+
+function detailHTML(f,c){
+  const agRows = (f.agendamentos||[]).map((a,idx)=>`
+    <div class="agend-row" data-idx="${idx}">
+      <input type="date" class="ag-inicio" value="${a.inicio||''}">
+      <input type="date" class="ag-fim" value="${a.fim||''}">
+      <input type="number" min="0" max="30" class="ag-dias" placeholder="dias" value="${a.dias||''}" title="Dias tirados de licença">
+      <input type="number" min="0" max="10" class="ag-abono" placeholder="abono" value="${a.abono||''}" title="Dias vendidos (abono pecuniário, máx. 10)">
+      <input type="text" class="ag-obs" placeholder="observação" value="${escapeAttr(a.obs||'')}">
+      <button class="btn btn-ghost btn-sm ag-remove">Remover</button>
+    </div>
+  `).join('');
+  const agHeader = (f.agendamentos||[]).length ? `
+    <div class="agend-row agend-header-row" style="margin-bottom:2px;">
+      <label class="mini">Início</label><label class="mini">Fim</label><label class="mini">Dias</label>
+      <label class="mini">Abono</label><label class="mini">Observação</label><span></span>
+    </div>` : '';
+
+  return `
+    <div class="detail-inner" data-id="${f.id}" onclick="event.stopPropagation()">
+      <div class="detail-grid">
+        <div class="field">
+          <label>Nome</label>
+          <input type="text" class="fld-nome" value="${escapeAttr(f.nome)}">
+        </div>
+        <div class="field">
+          <label>Matrícula</label>
+          <input type="text" class="fld-matricula" value="${escapeAttr(String(f.matricula||''))}">
+        </div>
+        <div class="field">
+          <label>Data de admissão</label>
+          <input type="date" class="fld-admissao" value="${f.admissao||''}">
+        </div>
+        <div class="field">
+          <label>Dias já tirados (calc. p/ períodos abaixo)</label>
+          <input type="text" class="mono" value="${c.diasTirados!==undefined?c.diasTirados+'d':'—'}" disabled style="background:var(--line-soft);">
+        </div>
+        <div class="field">
+          <label>Início do ciclo atual</label>
+          <input type="text" class="mono" value="${c.cicloInicio?fmt(c.cicloInicio):'—'}" disabled style="background:var(--line-soft);">
+        </div>
+        <div class="field">
+          <label>Prazo limite de gozo</label>
+          <input type="text" class="mono" value="${c.limite?fmt(c.limite):'—'}" disabled style="background:var(--line-soft);">
+        </div>
+        <div class="field">
+          <label>Situação especial</label>
+          <select class="fld-licenca">
+            <option value="" ${!f.situacaoEspecial?'selected':''}>Nenhuma</option>
+            <option value="acidente" ${f.situacaoEspecial==='acidente'?'selected':''}>Licença acidentária</option>
+            <option value="maternidade" ${f.situacaoEspecial==='maternidade'?'selected':''}>Licença maternidade</option>
+          </select>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-muted);margin:-8px 0 14px;">Os dias já tirados somam automaticamente os períodos abaixo (dias + abono) cujo fim já passou — abono conta assim que registrado.</div>
+
+      <div class="section-title">Períodos agendados / gozados</div>
+      <div class="agend-list">${agHeader}${agRows || '<div style="color:var(--ink-muted);font-size:13px;margin-bottom:8px;">Nenhum período agendado ainda.</div>'}</div>
+      <button class="btn btn-ghost btn-sm" id="btnAddAgend">+ Adicionar período</button>
+      <div style="font-size:11.5px;color:var(--ink-muted);margin-top:8px;">Ex.: 30 dias corridos = um período com 30 em "Dias". Parcelado = vários períodos. 20 dias + 10 de abono = "Dias" 20 e "Abono" 10 no mesmo período.</div>
+
+      <div class="field" style="margin-top:14px;">
+        <label>Observações</label>
+        <textarea class="fld-obs" rows="2">${escapeHtml(f.obs||'')}</textarea>
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn btn-danger btn-sm" id="btnDelete">Excluir colaborador</button>
+        <button class="btn btn-primary btn-sm" id="btnSave">Salvar alterações</button>
+      </div>
+    </div>
+  `;
+}
+
+function wireDetailEvents(){
+  const box = document.querySelector('.detail-inner');
+  if(!box) return;
+  const id = box.dataset.id;
+  const f = funcionarios.find(x=>x.id===id);
+
+  box.querySelector('#btnAddAgend').addEventListener('click', ()=>{
+    f.agendamentos = f.agendamentos || [];
+    f.agendamentos.push({inicio:'', fim:'', dias:'', abono:'', obs:''});
+    render();
+  });
+
+  box.querySelectorAll('.ag-remove').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const idx = Number(e.target.closest('.agend-row').dataset.idx);
+      f.agendamentos.splice(idx,1);
+      render();
+    });
+  });
+
+  box.querySelector('#btnDelete').addEventListener('click', async ()=>{
+    if(confirm(`Excluir ${f.nome} do painel?`)){
+      funcionarios = funcionarios.filter(x=>x.id!==id);
+      expandedId = null;
+      await saveData();
+      render();
+      showToast('Colaborador excluído.');
+    }
+  });
+
+  box.querySelector('#btnSave').addEventListener('click', async ()=>{
+    const novosAgendamentos = Array.from(box.querySelectorAll('.agend-row:not(.agend-header-row)')).map(row=>({
+      inicio: row.querySelector('.ag-inicio').value,
+      fim: row.querySelector('.ag-fim').value,
+      dias: row.querySelector('.ag-dias').value,
+      abono: row.querySelector('.ag-abono').value,
+      obs: row.querySelector('.ag-obs').value
+    }));
+
+    // Bloqueio: no máximo MONTH_CAP colaboradores por mês (mês com mais dias do período)
+    const mesesDesteColaborador = new Set();
+    novosAgendamentos.forEach(a=>{
+      if(a.inicio && a.fim){
+        const key = majorityMonthKey(a.inicio,a.fim);
+        if(key) mesesDesteColaborador.add(key);
+      }
+    });
+    for(const key of mesesDesteColaborador){
+      const jaAgendados = monthHeadcount(key, f.id);
+      if(jaAgendados >= MONTH_CAP){
+        showToast(`Limite atingido: ${monthLabel(key)} já tem ${MONTH_CAP} colaboradores de férias.`);
+        return;
+      }
+    }
+
+    f.nome = box.querySelector('.fld-nome').value.trim() || f.nome;
+    f.matricula = box.querySelector('.fld-matricula').value.trim();
+    f.admissao = box.querySelector('.fld-admissao').value;
+    f.situacaoEspecial = box.querySelector('.fld-licenca').value;
+    f.obs = box.querySelector('.fld-obs').value;
+    f.agendamentos = novosAgendamentos;
+    await saveData();
+    render();
+    showToast('Alterações salvas.');
+  });
+}
+
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+// ---------- Conferência de Ponto ----------
+let pontoBusca = '';
+
+function fmtCurta(iso){
+  const d = parseDate(iso);
+  return d ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}` : iso;
+}
+
+function fmtSaldo(min){
+  const neg = min<0;
+  const abs = Math.abs(min);
+  const h = String(Math.floor(abs/60)).padStart(2,'0');
+  const m = String(abs%60).padStart(2,'0');
+  return `${neg?'-':''}${h}:${m}`;
+}
+
+function renderBancoHoras(){
+  const tbody = document.getElementById('bancoHorasTbody');
+  if(!tbody) return;
+  const ranked = [...bancoHorasData].sort((a,b)=>Math.abs(b.saldoFinalMin)-Math.abs(a.saldoFinalMin));
+  tbody.innerHTML = ranked.map((d,idx)=>{
+    const acima = Math.abs(d.saldoFinalMin) > BANCO_HORAS_LIMITE_MIN;
+    const negativo = d.saldoFinalMin < 0;
+    const corSaldo = negativo ? 'var(--red)' : 'var(--teal-dark)';
+    return `
+      <tr class="row-main" style="cursor:default;${acima?'background:var(--red-soft);':''}">
+        <td class="mono">${idx+1}</td>
+        <td>
+          <div class="nome">${escapeHtml(d.nome)}</div>
+          <div class="mat">Mat. ${d.matricula}</div>
+        </td>
+        <td class="mono">${d.saldoInicial}</td>
+        <td class="mono" style="color:var(--green);">${d.credito}</td>
+        <td class="mono" style="color:var(--red);">${d.debito}</td>
+        <td class="mono" style="font-weight:700;color:${corSaldo};">${d.saldoFinal}</td>
+        <td>${acima ? `<span class="badge red"><span class="dot"></span>Chamar</span>` : ''}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderPonto(){
+  renderBancoHoras();
+  const lbl = document.getElementById('pontoPeriodoLabel');
+  if(lbl) lbl.textContent = `${fmt(parseDate(PONTO_PERIODO.inicio))} a ${fmt(parseDate(PONTO_PERIODO.fim))} · Referência ${PONTO_PERIODO.referencia} · dados lançados até ${fmt(parseDate(PONTO_PERIODO.dadosAte))}`;
+
+  const totalMarcacoes = pontoData.reduce((s,d)=>s+d.marcacoesIncompletas.length,0);
+  const totalSabadosOff = pontoData.reduce((s,d)=>s+d.sabadosNaoTrabalhados.length,0);
+  const totalSaidas2h = pontoData.reduce((s,d)=>s+d.saidasAntecipadas2h.length,0);
+
+  document.getElementById('pontoCards').innerHTML = `
+    <div class="card"><div class="num">${pontoData.length}</div><div class="lbl">Colaboradores no relatório</div></div>
+    <div class="card ${totalMarcacoes?'red':''}" data-pkey="marcacoes"><div class="num">${totalMarcacoes}</div><div class="lbl">Marcações sem bater</div></div>
+    <div class="card ${totalSabadosOff?'amber':''}" data-pkey="sabados"><div class="num">${totalSabadosOff}</div><div class="lbl">Sábados de folga usados</div></div>
+    <div class="card blue" data-pkey="saidas"><div class="num">${totalSaidas2h}</div><div class="lbl">Saídas ~2h antes (campanha)</div></div>
+  `;
+  document.querySelectorAll('#pontoCards [data-pkey]').forEach(el=>{
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', ()=> openPontoListModal(el.dataset.pkey));
+  });
+
+  let list = pontoData;
+  if(pontoBusca.trim()){
+    const q = pontoBusca.trim().toLowerCase();
+    list = list.filter(d=> d.nome.toLowerCase().includes(q) || String(d.matricula).toLowerCase().includes(q));
+  }
+  document.getElementById('pontoCountLabel').textContent = `${list.length} de ${pontoData.length}`;
+
+  document.getElementById('pontoTbody').innerHTML = list.map(d=>{
+    const acimaLimite = d.sabadosNaoTrabalhados.length > MONTH_CAP;
+    const marcHtml = d.marcacoesIncompletas.length
+      ? d.marcacoesIncompletas.map(m=>`<span class="badge red" style="margin:2px 4px 2px 0;"><span class="dot"></span>${fmtCurta(m.data)} (${m.tipo})</span>`).join('')
+      : '<span class="mono" style="color:var(--ink-muted);">completas</span>';
+    const sabHtml = `
+      <div>${d.sabadosNaoTrabalhados.length} de ${MONTH_CAP} não trabalhados ${acimaLimite?'<span class="full-tag">acima do limite</span>':''}</div>
+      ${d.sabadosNaoTrabalhados.length ? `<div style="font-size:11px;color:var(--ink-muted);margin-top:3px;">${d.sabadosNaoTrabalhados.map(s=>fmtCurta(s.data)).join(', ')}</div>` : ''}
+    `;
+    const saiHtml = d.saidasAntecipadas2h.length
+      ? d.saidasAntecipadas2h.map(s=>`<span class="badge blue" style="margin:2px 4px 2px 0;"><span class="dot"></span>${fmtCurta(s.data)} (${s.qtde})</span>`).join('')
+      : '<span class="mono" style="color:var(--ink-muted);">—</span>';
+    return `
+      <tr class="row-main" style="cursor:default;${acimaLimite?'background:var(--red-soft);':''}">
+        <td>
+          <div class="nome">${escapeHtml(d.nome)}</div>
+          <div class="mat">Mat. ${d.matricula}</div>
+        </td>
+        <td>${marcHtml}</td>
+        <td>${sabHtml}</td>
+        <td>${saiHtml}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+const PONTO_MODAL_META = {
+  marcacoes: {
+    titulo: 'Marcações sem bater',
+    sub: 'Para enviar ao colaborador que esqueceu de registrar o ponto',
+  },
+  sabados: {
+    titulo: 'Sábados de folga usados (campanha mensal)',
+    sub: 'Para solicitar ao RH o lançamento das folgas Prêmio',
+  },
+  saidas: {
+    titulo: 'Saídas ~2h antes (campanha semanal)',
+    sub: 'Para conferência ou solicitação de lançamento ao RH',
+  }
+};
+
+function openPontoListModal(key){
+  const meta = PONTO_MODAL_META[key];
+  const linhas = [];
+  pontoData.forEach(d=>{
+    if(key==='marcacoes' && d.marcacoesIncompletas.length){
+      const datas = d.marcacoesIncompletas.map(m=>`${fmtCurta(m.data)} (${m.tipo})`).join(', ');
+      linhas.push(`${d.nome} (Mat. ${d.matricula}): ${datas}`);
+    }
+    if(key==='sabados' && d.sabadosNaoTrabalhados.length){
+      const datas = d.sabadosNaoTrabalhados.map(s=>fmtCurta(s.data)).join(', ');
+      linhas.push(`${d.nome} (Mat. ${d.matricula}): ${datas} — ${d.sabadosNaoTrabalhados.length} de ${MONTH_CAP} usados`);
+    }
+    if(key==='saidas' && d.saidasAntecipadas2h.length){
+      const datas = d.saidasAntecipadas2h.map(s=>`${fmtCurta(s.data)} (${s.qtde})`).join(', ');
+      linhas.push(`${d.nome} (Mat. ${d.matricula}): ${datas}`);
+    }
+  });
+
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal" style="max-width:520px;">
+      <h3>${meta.titulo}</h3>
+      <div style="font-size:12px;color:var(--ink-muted);margin:-8px 0 14px;">${meta.sub}</div>
+      <div style="max-height:360px;overflow-y:auto;border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;background:var(--bg);">
+        ${linhas.length
+          ? linhas.map(l=>`<div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--line-soft);">${escapeHtml(l)}</div>`).join('')
+          : '<div style="font-size:13px;color:var(--ink-muted);">Nenhum registro nessa categoria.</div>'}
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="pmClose">Fechar</button>
+        <button class="btn btn-primary" id="pmCopy">Copiar lista</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(bg);
+  bg.addEventListener('click', (e)=>{ if(e.target===bg) bg.remove(); });
+  bg.querySelector('#pmClose').addEventListener('click', ()=>bg.remove());
+  bg.querySelector('#pmCopy').addEventListener('click', async ()=>{
+    const texto = `${meta.titulo}\n${linhas.join('\n')}`;
+    try{
+      await navigator.clipboard.writeText(texto);
+      showToast('Lista copiada.');
+    }catch(e){
+      showToast('Não foi possível copiar automaticamente. Selecione o texto manualmente.');
+    }
+  });
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.side-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.side-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab'+btn.dataset.tab.charAt(0).toUpperCase()+btn.dataset.tab.slice(1)).classList.add('active');
+  });
+});
+
+// ---------- Toolbar / modal ----------
+document.getElementById('search').addEventListener('input', (e)=>{
+  busca = e.target.value; render();
+});
+
+document.getElementById('btnAdd').addEventListener('click', ()=>{
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `
+    <div class="modal">
+      <h3>Adicionar colaborador</h3>
+      <div class="field"><label>Nome</label><input type="text" id="mNome"></div>
+      <div class="field"><label>Matrícula</label><input type="text" id="mMatricula"></div>
+      <div class="field"><label>Data de admissão</label><input type="date" id="mAdmissao"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="mCancel">Cancelar</button>
+        <button class="btn btn-primary" id="mSave">Adicionar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(bg);
+  bg.addEventListener('click', (e)=>{ if(e.target===bg) bg.remove(); });
+  bg.querySelector('#mCancel').addEventListener('click', ()=>bg.remove());
+  bg.querySelector('#mSave').addEventListener('click', async ()=>{
+    const nome = bg.querySelector('#mNome').value.trim();
+    if(!nome){ showToast('Informe o nome do colaborador.'); return; }
+    funcionarios.push({
+      id: uid(),
+      matricula: bg.querySelector('#mMatricula').value.trim(),
+      nome,
+      admissao: bg.querySelector('#mAdmissao').value,
+      situacaoEspecial: '',
+      agendamentos: [],
+      obs: ''
+    });
+    await saveData();
+    bg.remove();
+    render();
+    showToast('Colaborador adicionado.');
+  });
+});
+
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const rows = [['Matrícula','Nome','Admissão','Início do ciclo','Prazo limite','Dias disponíveis','Realizou férias?','Status','Licença']];
+  funcionarios.forEach(f=>{
+    const c = computeCycle(f);
+    const lic = LICENCA_META[f.situacaoEspecial];
+    const realMeta = REALIZACAO_META[realizacaoStatus(c)];
+    rows.push([
+      f.matricula||'', f.nome, f.admissao||'',
+      c.cicloInicio?fmt(c.cicloInicio):'', c.limite?fmt(c.limite):'',
+      c.diasDisponiveis??'', realMeta?realMeta.label:'', STATUS_META[c.status].label, lic?lic.label:''
+    ]);
+  });
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'gestao-de-cobranca.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('pontoSearch').addEventListener('input', (e)=>{
+  pontoBusca = e.target.value; renderPonto();
+});
+document.getElementById('btnCopiarBanco').addEventListener('click', async ()=>{
+  const acima = [...bancoHorasData]
+    .filter(d=>Math.abs(d.saldoFinalMin) > BANCO_HORAS_LIMITE_MIN)
+    .sort((a,b)=>Math.abs(b.saldoFinalMin)-Math.abs(a.saldoFinalMin));
+  if(!acima.length){ showToast('Ninguém acima do limite no momento.'); return; }
+  const texto = 'Banco de horas — colaboradores para chamar (acúmulo acima de 4h)\n' +
+    acima.map(d=>`${d.nome} (Mat. ${d.matricula}): saldo ${d.saldoFinal}`).join('\n');
+  try{
+    await navigator.clipboard.writeText(texto);
+    showToast('Lista copiada.');
+  }catch(e){
+    showToast('Não foi possível copiar automaticamente. Selecione o texto manualmente.');
+  }
+});
+renderPonto();
+renderCampanha();
+
+loadData();
+</script>
+</body>
+</html>
