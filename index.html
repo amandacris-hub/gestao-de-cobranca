@@ -377,6 +377,11 @@
     <div class="eyebrow" style="margin-bottom:4px;">Cartão de ponto — período analisado</div>
     <div style="font-size:11.5px;color:var(--ink-muted);margin-bottom:16px;" id="pontoPeriodoLabel"></div>
 
+    <div class="toolbar" style="margin-bottom:12px;">
+      <button class="btn btn-ghost" id="btnPontoImport">Importar relatório de ponto (JSON)</button>
+      <input type="file" id="inputPontoImport" accept="application/json" style="display:none">
+    </div>
+
     <div class="cards" id="pontoCards" style="grid-template-columns:repeat(4,1fr);"></div>
 
     <div class="toolbar">
@@ -467,9 +472,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const PONTO_PERIODO = {inicio:'2026-07-16', fim:'2026-08-15', referencia:'08/2026', dadosAte:'2026-08-11'};
-const PONTO_SABADOS_PERIODO = ['2026-07-18','2026-07-25','2026-08-01','2026-08-08'];
-const pontoData = [
+const PONTO_STORAGE_KEY = 'pontoState';
+const PONTO_PERIODO_DEFAULT = {inicio:'2026-07-16', fim:'2026-08-15', referencia:'08/2026', dadosAte:'2026-08-11'};
+const PONTO_SABADOS_PERIODO_DEFAULT = ['2026-07-18','2026-07-25','2026-08-01','2026-08-08'];
+const pontoDataDefault = [
   {nome:"Alice Mariano Ramos",matricula:"4415",marcacoesIncompletas:[],sabadosNaoTrabalhados:[],sabadosTrabalhados:[],saidasAntecipadas2h:[]},
   {nome:"Amanda Cristina Aparecida Silva",matricula:"2340",marcacoesIncompletas:[{data:"2026-07-17",dow:"Sex",tipo:"saida"},{data:"2026-07-24",dow:"Sex",tipo:"entrada"},{data:"2026-07-25",dow:"Sáb",tipo:"saida"}],sabadosNaoTrabalhados:[],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"},{data:"2026-08-01"},{data:"2026-08-08"}],saidasAntecipadas2h:[{data:"2026-08-10",qtde:"01:59"}]},
   {nome:"Ana Julia Camargo",matricula:"9867",marcacoesIncompletas:[{data:"2026-08-04",dow:"Ter",tipo:"saida"}],sabadosNaoTrabalhados:[{data:"2026-08-01",qtde:"04:00"},{data:"2026-08-08",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-18"},{data:"2026-07-25"}],saidasAntecipadas2h:[]},
@@ -494,7 +500,7 @@ const pontoData = [
   {nome:"Tainara Livia Rocha",matricula:"3504",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-07-18",qtde:"04:00"},{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-07-25"}],saidasAntecipadas2h:[]},
   {nome:"Thierry Rodrigues Dias",matricula:"7513",marcacoesIncompletas:[],sabadosNaoTrabalhados:[{data:"2026-08-01",qtde:"04:00"}],sabadosTrabalhados:[{data:"2026-08-08"}],saidasAntecipadas2h:[]},
 ];
-const bancoHorasData = [
+const bancoHorasDataDefault = [
   {nome:"Gabrielli Ferreira Profeta",matricula:"13028",saldoInicial:"-156:48",credito:"00:15",debito:"-19:26",saldoFinal:"-175:59",saldoFinalMin:-10559},
   {nome:"Jade Oliveira Franco Da Silva",matricula:"6281",saldoInicial:"-27:18",credito:"00:39",debito:"-12:29",saldoFinal:"-39:08",saldoFinalMin:-2348},
   {nome:"Luciana Fernandes Lacerda",matricula:"4739",saldoInicial:"-19:11",credito:"00:53",debito:"-16:16",saldoFinal:"-34:34",saldoFinalMin:-2074},
@@ -520,6 +526,51 @@ const bancoHorasData = [
   {nome:"Joao Victor Vitoriano Da Silva",matricula:"13020",saldoInicial:"-00:20",credito:"00:44",debito:"-01:10",saldoFinal:"-00:46",saldoFinalMin:-46},
 ];
 const BANCO_HORAS_LIMITE_MIN = 240; // 4h — acima disso, priorizar chamada
+
+let PONTO_PERIODO = PONTO_PERIODO_DEFAULT;
+let PONTO_SABADOS_PERIODO = PONTO_SABADOS_PERIODO_DEFAULT;
+let pontoData = pontoDataDefault;
+let bancoHorasData = bancoHorasDataDefault;
+
+function loadPontoState(){
+  try{
+    const raw = localStorage.getItem(PONTO_STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed.PONTO_PERIODO) PONTO_PERIODO = parsed.PONTO_PERIODO;
+      if(parsed.PONTO_SABADOS_PERIODO) PONTO_SABADOS_PERIODO = parsed.PONTO_SABADOS_PERIODO;
+      if(parsed.pontoData) pontoData = parsed.pontoData;
+      if(parsed.bancoHorasData) bancoHorasData = parsed.bancoHorasData;
+    }
+  }catch(e){}
+}
+loadPontoState();
+
+document.getElementById('btnPontoImport').addEventListener('click', ()=>{
+  document.getElementById('inputPontoImport').click();
+});
+document.getElementById('inputPontoImport').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const texto = await file.text();
+    const dados = JSON.parse(texto);
+    if(!dados.pontoData || !dados.bancoHorasData) throw new Error('Formato inválido');
+    const ok = confirm(`Importar relatório do período ${dados.PONTO_PERIODO ? dados.PONTO_PERIODO.referencia : ''}? Isso substitui os dados de ponto e banco de horas atuais neste navegador.`);
+    if(!ok){ e.target.value=''; return; }
+    localStorage.setItem(PONTO_STORAGE_KEY, JSON.stringify(dados));
+    PONTO_PERIODO = dados.PONTO_PERIODO || PONTO_PERIODO;
+    PONTO_SABADOS_PERIODO = dados.PONTO_SABADOS_PERIODO || PONTO_SABADOS_PERIODO;
+    pontoData = dados.pontoData;
+    bancoHorasData = dados.bancoHorasData;
+    renderPonto();
+    renderBancoHoras();
+    showToast('Relatório de ponto importado com sucesso.');
+  }catch(err){
+    showToast('Arquivo inválido. Verifique se é um relatório exportado no formato certo.');
+  }
+  e.target.value = '';
+});
 
 const campanhaData = {
   titulo: 'Acompanhamento de Recuperação — Campanha',
